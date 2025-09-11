@@ -1,0 +1,2431 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Protein REX — Retro Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --retro-font: 'Press Start 2P','VT323',monospace;
+            --lcd-bg: #d7b3b3;
+            --shell: #d9d3c7;
+            --black: #111;
+            --green: #10b981;
+            --red: #ef4444;
+            --accent: #7b1c1c;
+            --lcd-w: 760px;
+            --lcd-h: 460px;
+            --belt-h: 40px; /* толщина ленты */
+            --stroke: 8px; /* увеличили толщину обводки в 2 раза */
+            --dash-l: 16; /* увеличили длину штрихов в 2 раза */
+            --dash-g: 24; /* увеличили промежутки в 4 раза */
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(#ece9df,#e4e1d8);
+            font-family: var(--retro-font)
+        }
+
+        .wrap {
+            display: grid;
+            place-items: center;
+            height: 100%;
+            padding: 1.5vmin
+        }
+
+        .shell {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: var(--shell);
+            border: 0.75vmin solid #000;
+            border-radius: 2.5vmin;
+            box-shadow: inset 0 0.25vmin 0 #fff, inset 0 -0.375vmin 0 #b8b3a4, 0 2.75vmin 6.25vmin rgba(0,0,0,.35)
+        }
+
+        .screw {
+            position: absolute;
+            width: 2vmin;
+            height: 2vmin;
+            border-radius: 50%;
+            background: radial-gradient(#9f9b8f 30%, #6f6b61 31%, #bfb9aa 60%);
+            box-shadow: inset 0 0.125vmin 0.125vmin rgba(255,255,255,.8), 0 0.125vmin 0 rgba(0,0,0,.25)
+        }
+
+        /* ====== ХЕДЕР (десктоп) ====== */
+        .hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5vmin;
+            padding: 1.5vmin 2.5vmin;
+            border-bottom: 0.125vmin solid #b8b3a5;
+            flex-wrap: wrap
+        }
+
+        .hdr-left {
+            display: flex;
+            align-items: center;
+            gap: 1.75vmin
+        }
+
+        .hdr-left img {
+            user-select: none
+        }
+
+        .hdr-right {
+            display: flex;
+            align-items: center;
+            gap: 2vmin;
+            flex-wrap: wrap;
+            justify-content: flex-end
+        }
+
+        /* TIME как семисегментный на десктопе */
+        .time-desk {
+            display: flex;
+            align-items: center;
+            gap: 1vmin
+        }
+
+        /* Экран */
+        .lcd {
+            position: relative;
+            width: stretch;
+            height: stretch;
+            border: 0.5vmin solid #111;
+            border-radius: 1.75vmin;
+            overflow: hidden;
+            box-shadow: inset 0 0.25vmin 0 #efe1e1, inset 0 -0.25vmin 0 #7b6666;
+            overflow: hidden
+        }
+
+        .area {
+            display: grid;
+            width: 100%;
+            height: 100%;
+            grid-template-columns: 1fr auto;
+            gap: 2.25vmin;
+            padding: 3vmin 3vmin 3vmin 3vmin
+        }
+
+
+        .screen-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%
+        }
+
+        .abs {
+            position: absolute
+        }
+
+        .center {
+            position: absolute;
+            left: 50%;
+            top: calc(50%);
+            transform: translate(-50%,-25%);
+            z-index: 5
+        }
+
+        /* 7-seg */
+        .seg {
+            display: flex;
+            gap: 0.5vmin;
+            align-items: center
+        }
+
+        .seg .digit {
+            position: relative;
+            width: 3.75vmin;
+            height: 7.5vmin
+        }
+
+        .seg .digit div {
+            transition: opacity .15s
+        }
+
+        .btn-round {
+            width: 8vmin;
+            height: 8vmin;
+            border-radius: 9999px;
+            border: 0.25vmin solid #000;
+            box-shadow: 0 0.25vmin 0 #b8b3a4,0 0.75vmin 1.5vmin rgba(0,0,0,.10);
+            transition: .15s transform ease-out;
+            cursor: pointer
+        }
+
+        .btn-round:hover {
+            transform: translateY(-0.125vmin)
+        }
+
+        .btn-round:active {
+            transform: translateY(0.25vmin)
+        }
+
+        .btn-caption {
+            margin-top: 1vmin;
+            font-size: 1vmin;
+            text-transform: uppercase;
+            text-align: center
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(12.5vmin, 1fr));
+            gap: 2.25vmin;
+            place-items: center;
+            min-width: 17.5vmin
+        }
+
+        .desktop-joystick {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .desktop-joystick .joystick {
+            position: relative;
+            width: 22.5vmin;
+            height: 22.5vmin;
+            border: 0.375vmin solid #000;
+            border-radius: 50%;
+            background: #d9d3c7;
+            box-shadow: inset 0 0.25vmin 0 #fff, inset 0 -0.25vmin 0 #b8b3a4
+        }
+
+        .desktop-joystick .joy-cross {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            width: 15vmin;
+            height: 15vmin;
+            transform: translate(-50%,-50%)
+        }
+
+        .desktop-joystick .joy-cross::before, .desktop-joystick .joy-cross::after {
+            content: "";
+            position: absolute;
+            background: #000;
+            opacity: .1
+        }
+
+        .desktop-joystick .joy-cross::before {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 0.5vmin;
+            transform: translateX(-50%)
+        }
+
+        .desktop-joystick .joy-cross::after {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 0.5vmin;
+            transform: translateY(-50%)
+        }
+
+        .desktop-joystick .joy-hit {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .desktop-joystick .joy-tl {
+            left: 0;
+            top: 0
+        }
+
+        .desktop-joystick .joy-tr {
+            right: 0;
+            top: 0
+        }
+
+        .desktop-joystick .joy-bl {
+            left: 0;
+            bottom: 0
+        }
+
+        .desktop-joystick .joy-br {
+            right: 0;
+            bottom: 0
+        }
+
+        .desktop-joystick .joy-arrow {
+            font-size: 1.75vmin;
+            color: rgba(0,0,0,0.4);
+            font-weight: bold;
+            pointer-events: none;
+            user-select: none;
+            transition: color 0.15s ease
+        }
+
+        .desktop-joystick .joy-hit:active .joy-arrow {
+            color: rgba(0,0,0,0.8)
+        }
+
+        #mobileCounters {
+            display: none
+        }
+
+        .action-buttons {
+            display: contents
+        }
+
+        .sfx-container-mobile {
+            display: none
+        }
+
+        .sfx-container {
+            text-align: center
+        }
+
+
+        .rules-title {
+            font-size: 1.5vmin;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: #555;
+            margin: 0.75vmin 0
+        }
+
+        .rules-text {
+            font-size: 1.5vmin;
+            color: #333;
+            line-height: 1.5
+        }
+
+        .footer {
+            position: relative;
+            padding: 0 2.5vmin 5vmin
+        }
+
+        .footer .bar {
+            height: 0.25vmin;
+            background: #af1212;
+            border-radius: 999px
+        }
+
+        .footer .url {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1vmin;
+            font-size: 1.25vmin;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: #666
+        }
+
+        /* Overlay */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            pointer-events: none;
+            z-index: 8;
+            background: rgba(0,0,0,0.7)
+        }
+
+        .overlay .txt {
+            color: #fff;
+            text-align: center
+        }
+
+        /* Shake */
+        @keyframes shake {
+            0%,100% {
+                transform: translateX(0)
+            }
+
+            20% {
+                transform: translateX(-0.25vmin)
+            }
+
+            40% {
+                transform: translateX(0.25vmin)
+            }
+
+            60% {
+                transform: translateX(-0.25vmin)
+            }
+
+            80% {
+                transform: translateX(0.25vmin)
+            }
+        }
+
+        .shake {
+            animation: shake .3s ease
+        }
+
+        /* SVG dash run around belts */
+        .belt-outline {
+            fill: none;
+            stroke: rgba(0,0,0,.55);
+            stroke-width: 0.5vmin;
+            stroke-linecap: butt;
+            stroke-linejoin: miter
+        }
+
+        @keyframes dashRun {
+            from {
+                stroke-dashoffset: 0
+            }
+
+            to {
+                stroke-dashoffset: var(--dash-cycle)
+            }
+        }
+
+        /* Retro switch (SFX) */
+        .switch {
+            position: relative;
+            width: 8vmin;
+            height: 4vmin;
+            border: 0.375vmin solid #000;
+            border-radius: 0.5vmin;
+            background: #d9d3c7;
+            box-shadow: inset 0 0.25vmin 0 #fff, inset 0 -0.25vmin 0 #b8b3a4, 0 0.25vmin 0.5vmin rgba(0,0,0,.2)
+        }
+
+        .knob {
+            position: absolute;
+            top: 0.325vmin;
+            left: 0.325vmin;
+            width: 3.25vmin;
+            height: 2.75vmin;
+            border-radius: 0.25vmin;
+            background: linear-gradient(180deg, #e5e2d8 0%, #d9d3c7 100%);
+            border: 0.25vmin solid #000;
+            box-shadow: inset 0 0.125vmin 0 #fff, inset 0 -0.125vmin 0 #b8b3a4;
+            transition: .15s left ease-out
+        }
+
+        .switch.on .knob {
+            left: 3.625vmin
+        }
+
+        .switch-label {
+            font-size: 0.875vmin;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: #333;
+            font-weight: bold
+        }
+
+        /* Small badges */
+        .badge {
+            display: inline-grid;
+            place-items: center;
+            background: #000;
+            color: #fff;
+            padding: 0.75vmin 1vmin;
+            border-radius: 0.75vmin;
+            letter-spacing: .2em;
+            text-transform: uppercase;
+            font-size: 1.25vmin
+        }
+
+        /* Hero dance */
+        @keyframes danceBob {
+            0%,100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(0.75vmin)
+            }
+        }
+
+        .dance {
+            animation: danceBob .6s ease-in-out infinite
+        }
+
+        /* === Принудительный режим мобайл-превью (.force-mobile) === */
+        html.force-mobile, body.force-mobile {
+            height: 100%;
+            overflow: hidden
+        }
+
+        .force-mobile .hdr {
+            display: none
+        }
+
+        .force-mobile .area {
+            width: 100%;
+            height: 100%;
+            grid-template-columns: 1fr auto;
+            padding: 3vmin 3vmin 3vmin 3vmin
+        }
+
+        .force-mobile .controls {
+            display: flex;
+            height: stretch;
+            flex-direction: column;
+            align-items: center;
+            gap: 1vmin;
+            padding: 1vmin 0.75vmin;
+            justify-content: space-around;
+            min-width: 17.5vmin
+        }
+
+        .force-mobile #mobileCounters {
+            display: block !important;
+            margin-bottom: 0.5vmin;
+            order: 2
+        }
+
+        .force-mobile .action-buttons {
+            display: flex !important;
+            flex-direction: row;
+            align-items: center;
+            margin-bottom: 1vmin;
+            order: 3;
+            gap: 2vmin;
+            position: relative;
+            padding-top: 1.5vmin
+        }
+
+        .force-mobile .action-buttons::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 0.25vmin;
+            background: #b8b3a4
+        }
+
+        .force-mobile .sfx-container-mobile {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5vmin;
+            margin-bottom: 0
+        }
+
+
+        .force-mobile .sfx-container .switch {
+            transform: rotate(0deg)
+        }
+
+        .force-mobile .sfx-container .btn-caption {
+            writing-mode: horizontal-tb;
+            text-orientation: mixed;
+            font-size: 0.875vmin;
+            margin-top: 0.5vmin;
+            margin-left: 0
+        }
+
+        .force-mobile .rules-block, .force-mobile .footer {
+            display: none !important
+        }
+
+        .force-mobile .desktop-joystick {
+            display: none !important
+        }
+
+        .force-mobile .logos-bottom {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 1vmin;
+            margin-top: 0.5vmin;
+            order: 1
+        }
+
+        .force-mobile .logos-bottom img:first-child {
+            max-width: 10vmin;
+            height: auto
+        }
+
+        .force-mobile .logos-bottom img:last-child {
+            max-width: 15vmin;
+            height: auto;
+            margin-top: 1vmin
+        }
+
+        .force-mobile .mini .seg .digit {
+            width: 2vmin;
+            height: 4vmin
+        }
+
+        .force-mobile .mini .label {
+            font-size: 1vmin;
+            letter-spacing: .06em
+        }
+
+        .force-mobile .btn-caption {
+            font-size: 1vmin
+        }
+
+        .force-mobile .knob {
+            width: 3.25vmin;
+            height: 2.75vmin
+        }
+
+        /* доп. правила для форс-мобайла */
+        .force-mobile #joyWrap {
+            display: block !important
+        }
+
+        /* джойстик видимый в форс-мобайл независимо от размеров окна */
+        .force-mobile .joystick {
+            position: relative;
+            width: 22.5vmin;
+            height: 22.5vmin;
+            border: 0.25vmin solid #000;
+            border-radius: 50%;
+            background: #d9d3c7;
+            box-shadow: inset 0 0.25vmin 0 #fff, inset 0 -0.25vmin 0 #b8b3a4
+        }
+
+        .force-mobile .joy-cross {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            width: 15vmin;
+            height: 15vmin;
+            transform: translate(-50%,-50%)
+        }
+
+        .force-mobile .joy-cross::before, .force-mobile .joy-cross::after {
+            content: "";
+            position: absolute;
+            background: #000;
+            opacity: .1
+        }
+
+        .force-mobile .joy-cross::before {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 0.5vmin;
+            transform: translateX(-25%)
+        }
+
+        .force-mobile .joy-cross::after {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 0.5vmin;
+            transform: translateY(-25%)
+        }
+
+        .force-mobile .joy-hit {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .force-mobile .joy-tl {
+            left: 0;
+            top: 0
+        }
+
+        .force-mobile .joy-tr {
+            right: 0;
+            top: 0
+        }
+
+        .force-mobile .joy-bl {
+            left: 0;
+            bottom: 0
+        }
+
+        .force-mobile .joy-br {
+            right: 0;
+            bottom: 0
+        }
+
+        .force-mobile .joy-arrow {
+            font-size: 1.75vmin;
+            color: rgba(0,0,0,0.4);
+            font-weight: bold;
+            pointer-events: none;
+            user-select: none;
+            transition: color 0.15s ease
+        }
+
+        .force-mobile .joy-hit:active .joy-arrow {
+            color: rgba(0,0,0,0.8)
+        }
+
+        /* Герой ближе к конвейерам в мобильной версии */
+        .force-mobile .center {
+            top: calc(50% + 5vmin);
+        }
+
+        /* Promo code modal */
+        .promo-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: grid;
+            place-items: center;
+            z-index: 1000;
+            display: none;
+            padding: 2.5vmin;
+            box-sizing: border-box
+        }
+
+        .promo-content {
+            background: var(--shell);
+            border: 0.5vmin solid #000;
+            border-radius: 1.5vmin;
+            padding: 3vmin;
+            text-align: center;
+            box-shadow: 0 1vmin 4vmin rgba(0,0,0,0.4);
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: auto
+        }
+
+        .promo-title {
+            font-size: min(2.25vmin, 4vw);
+            margin-bottom: 2vmin;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #000
+        }
+
+        .promo-code {
+            background: #000;
+            color: #fff;
+            padding: 2vmin 3vmin;
+            border-radius: 1vmin;
+            font-size: min(3vmin, 6vw);
+            letter-spacing: 0.2em;
+            margin: 2vmin 0;
+            cursor: pointer;
+            transition: background 0.2s;
+            word-break: break-all
+        }
+
+        .promo-code:hover {
+            background: #333
+        }
+
+        .promo-copy-hint {
+            font-size: min(1.5vmin, 3vw);
+            color: #666;
+            margin-top: 1vmin
+        }
+
+        /* Дополнительные стили для мобильного модального окна */
+        .force-mobile .promo-modal {
+            padding: 1.25vmin
+        }
+
+        .force-mobile .promo-content {
+            padding: 2.5vmin;
+            max-width: 95vw
+        }
+
+        .force-mobile .promo-title {
+            font-size: 2vmin
+        }
+
+        .force-mobile .promo-code {
+            font-size: 2.5vmin;
+            padding: 1.5vmin 2vmin
+        }
+
+        .force-mobile .promo-copy-hint {
+            font-size: 1.375vmin
+        }
+
+        /* Батончики анимация */
+        .bar-particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 999
+        }
+
+        @keyframes barFly {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg) scale(1)
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(var(--fly-y,0)) translateX(var(--fly-x,0)) rotate(var(--fly-rot,0deg)) scale(0.5)
+            }
+        }
+
+        /* Автоматическое включение мобильного режима для Telegram Mini App */
+        .telegram-mini-app {
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        .telegram-mini-app .hdr {
+            display: none;
+        }
+
+        .telegram-mini-app .area {
+            width: 100%;
+            height: 100%;
+            grid-template-columns: 1fr auto;
+            padding: 3vmin 3vmin 3vmin 3vmin;
+            box-sizing: border-box;
+        }
+
+        .telegram-mini-app .lcd {
+            width: auto;
+            height: 70%;
+            max-height: none;
+            aspect-ratio: 760/460;
+            border-radius: 1.75vmin;
+            border: 0.25vmin solid #111;
+        }
+
+        .telegram-mini-app .center {
+            top: calc(50% + 5vmin);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="shell" id="shell">
+            <div class="screw" style="top:1.25vmin;left:1.5vmin"></div>
+            <div class="screw" style="top:1.25vmin; right:1.5vmin"></div>
+            <div class="screw" style="bottom:1.25vmin;left:1.5vmin"></div>
+            <div class="screw" style="bottom:1.25vmin;right:1.5vmin"></div>
+
+            <!-- ===== ХЕДЕР (для десктопа остаётся) ===== -->
+            <div class="hdr">
+                <div class="hdr-left">
+                    <img id="logoRex" src="https://i.ibb.co/S4FxhQVx/12-2025.png" alt="Protein REX" style="height:4vmin" />
+                    <img id="logoCyber" src="https://cdn.splay.uz/media/contents_meta/kiberderevnya/images/logo_image_rectangle.resized.png" alt="Кибердеревня" style="height:8vmin; margin-top:2vmin" />
+                </div>
+                <div class="hdr-right">
+                    <!-- Переключатель звука (виден на ПК) -->
+                    <div style="display:flex; align-items:center; gap:1vmin; margin-right:2.5vmin">
+                        <div id="sfxSwitchHeader" class="switch"><div class="knob"></div></div>
+                        <div class="btn-caption" id="sfxLabelHeader">ЗВУК: ON</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1vmin; border-right:0.125vmin solid #b8b3a5; padding-right:2.5vmin">
+                        <span class="label" style="letter-spacing:.12em; text-transform:uppercase; font-size:1.125vmin">СЧЕТ</span>
+                        <div class="seg" id="score"></div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1vmin; border-right: 0.125vmin solid #b8b3a5; padding-right: 2.5vmin ">
+                        <span class="label" style="letter-spacing:.12em; text-transform:uppercase; font-size:1.125vmin">ОШИБКИ</span>
+                        <div class="seg" id="miss"></div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1vmin">
+                        <span class="label" style="letter-spacing:.12em; text-transform:uppercase; font-size:1.125vmin">УРОВЕНЬ</span>
+                        <div class="seg" id="lvl"></div>
+                        <div style="width:14vmin; height:1vmin; background:#e3c1c1; border-radius:999px; overflow:hidden"><div id="lvlbar" style="height:100%; width:0; background:#af1212"></div></div>
+                    </div>
+                    <div class="time-desk" style="display:flex; align-items:center; gap:1vmin">
+                        <span class="label" style="letter-spacing:.12em; text-transform:uppercase; font-size:1.125vmin">ВРЕМЯ</span>
+                        <div class="seg" id="timeDesk"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="area">
+                <div class="screen-wrap">
+                    <div class="lcd" id="lcd">
+                        <img src="https://64.media.tumblr.com/0f3927f0017e84b9c6ec69901c5a825a/tumblr_n9lwm7N7VX1tz79vpo1_r1_1280.gif" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;" />
+                        <div class="grid-bg"></div>
+                        <svg class="abs" viewBox="0 0 760 460" style="inset:0" id="beltsSvg"></svg>
+                        <div id="itemsLayer" class="abs" style="inset:0"></div>
+                        <!-- Touch control areas (сохранили) -->
+                        <div id="touchLeft" class="abs" style="left:0; top:12.5vmin; width:23.75vmin; height:32.5vmin; z-index:10; opacity:0"></div>
+                        <div id="touchRight" class="abs" style="right:0; top:12.5vmin; width:23.75vmin; height:32.5vmin; z-index:10; opacity:0"></div>
+                        <div id="hero" class="center"></div>
+                        <div id="flash" class="abs" style="inset:0; pointer-events:none"></div>
+                        <!-- Overlay: правила перед игрой -->
+                        <div id="overlay" class="overlay">
+                            <div class="txt"; style="max-width:86%">
+                                <div id="overlayTitle" style="font-weight:700; letter-spacing:.12em; margin-bottom:1.25vw; font-size:2vw">НАЖМИТЕ ПРОБЕЛ</div>
+                                <div id="rules" style="display:normal">
+                                    <div style="margin-bottom:2.5vw"></div>
+                                    <div class="rules-title" style="color:#fff; opacity:.8; font-size:1.75vw">ПРАВИЛА</div>
+                                    <div style="margin-bottom:2.5vw"></div>
+                                    <div class="rules-text" style="color:#fff; font-size:1.375vw">Батончик <b>REX Картошка</b> — <span style="color:var(--green)">друг</span>. Лови.</div>
+                                    <div class="rules-text" style="color:#fff; font-size:1.375vw">Сахар — <span style="color:var(--red)">враг</span>. Избегай.</div>
+                                    <div class="rules-text" style="color:#fff; font-size:1.375vw">Приём засчитывается, если совпали сторона (←/→) и ярус (↑/↓).</div>
+                                    <div class="rules-text" style="color:#fff; font-size:1.375vw">На уровне допускается 3 ошибки.</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="levelToast" class="abs" style="left:0; right:0; top:1.75vmin; display:none; justify-content:center; z-index:9">
+                            <div class="badge">УРОВЕНЬ <span id="toastNum" style="margin-left:0.75vmin"></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== Правая колонка ===== -->
+                <div class="controls">
+                    <!-- Мобильная компактная панель счётчиков -->
+                    <div id="mobileCounters" class="mini">
+                        <div style="display:flex; flex-direction:column; gap:0.75vmin; align-items:stretch">
+                            <div style="display:flex; align-items:center; gap:1vmin; font-size:1.25vmin">
+                                <div style="display:flex; align-items:center; gap:0.5vmin">
+                                    <span class="label" style="font-size:1.125vmin; white-space:nowrap">СЧЕТ</span><div class="seg" id="score_m"></div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:0.5vmin">
+                                    <span class="label" style="font-size:1.125vmin; white-space:nowrap">ОШИБКИ</span><div class="seg" id="miss_m"></div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:1vmin; font-size:1.25vmin">
+                                <div style="display:flex; align-items:center; gap:0.5vmin">
+                                    <span class="label" style="font-size:1.125vmin; white-space: nowrap ">УРОВЕНЬ</span><div class="seg" id="lvl_m"></div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:0.5vmin">
+                                    <span class="label" style="font-size:1.125vmin; white-space: nowrap">ВРЕМЯ</span><div class="seg" id="time_m"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="actionButtons" class="action-buttons">
+                        <div>
+                            <button id="btnStart" class="btn-round" style="background:#c73a32"></button>
+                            <div class="btn-caption" id="btnStartCap" style="font-size: 0.875vmin">СТАРТ</div>
+                        </div>
+                        <div class="sfx-container-mobile" style="order:0; margin-bottom:0; align-self:center">
+                            <div id="sfxSwitch" class="switch"><div class="knob"></div></div>
+                            <div class="btn-caption" id="sfxLabel" style="font-size: 0.875vmin">ЗВУК: ON</div>
+                        </div>
+                        <div>
+                            <button id="btnReset" class="btn-round" style="background:#6b7280"></button>
+                            <div class="btn-caption" style="font-size:0.875vmin">СБРОС</div>
+                        </div>
+                    </div>
+
+                    <!-- Джойстик для десктопа -->
+                    <div id="desktopJoyWrap" class="desktop-joystick" style="grid-column: span 2; display:flex; flex-direction:column; align-items:center; margin-top:0.75vmin">
+                        <div class="joystick" id="desktopJoystick">
+                            <div class="joy-cross"></div>
+                            <div class="joy-hit joy-tl" data-dir="L" data-arm="up">
+                                <div class="joy-arrow">↖</div>
+                            </div>
+                            <div class="joy-hit joy-tr" data-dir="R" data-arm="up">
+                                <div class="joy-arrow">↗</div>
+                            </div>
+                            <div class="joy-hit joy-bl" data-dir="L" data-arm="down">
+                                <div class="joy-arrow">↙</div>
+                            </div>
+                            <div class="joy-hit joy-br" data-dir="R" data-arm="down">
+                                <div class="joy-arrow">↘</div>
+                            </div>
+                        </div>
+                        <div class="btn-caption" style="text-align:center; margin-top:1vmin">Джойстик</div>
+                    </div>
+
+
+
+
+
+
+                    <!-- КНОПКУ АВТОПЛЕЯ УБРАЛИ (режим оставлен в коде) -->
+                    <!-- Большой джойстик (только моб.) -->
+                    <div id="joyWrap" style="display:none; order:4">
+                        <div class="joystick" id="joystick">
+                            <div class="joy-cross"></div>
+                            <div class="joy-hit joy-tl" data-dir="L" data-arm="up">
+                                <div class="joy-arrow">↖</div>
+                            </div>
+                            <div class="joy-hit joy-tr" data-dir="R" data-arm="up">
+                                <div class="joy-arrow">↗</div>
+                            </div>
+                            <div class="joy-hit joy-bl" data-dir="L" data-arm="down">
+                                <div class="joy-arrow">↙</div>
+                            </div>
+                            <div class="joy-hit joy-br" data-dir="R" data-arm="down">
+                                <div class="joy-arrow">↘</div>
+                            </div>
+                        </div>
+                        <div class="btn-caption" style="text-align:center; font-size:1.125vmin">Джойстик</div>
+                    </div>
+
+                    <!-- Лого вниз справа (моб.) -->
+                    <div id="logosMobile" class="logos-bottom" style="display:none">
+                        <img src="https://i.ibb.co/S4FxhQVx/12-2025.png" alt="Protein REX" />
+                        <img src="https://cdn.splay.uz/media/contents_meta/kiberderevnya/images/logo_image_rectangle.resized.png" alt="Кибердеревня" />
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <div class="bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo code modal -->
+    <div id="promoModal" class="promo-modal">
+        <div class="promo-content">
+            <div class="promo-title">🎉 Поздравляем с победой! 🎉</div>
+            <div>Ваш промокод:</div>
+            <div id="promoCode" class="promo-code">ROBOGOZIN</div>
+            <div class="promo-copy-hint">Нажмите на промокод для копирования</div>
+        </div>
+    </div>
+
+    <script>
+        (() =>
+        {
+            // Telegram Mini App Integration
+            let tg = null;
+            if (window.Telegram && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                document.body.classList.add('telegram-mini-app');
+                
+                // Включаем мобильный режим принудительно
+                document.body.classList.add('force-mobile');
+                document.documentElement.classList.add('force-mobile');
+            }
+            const LOGO_REX = document.getElementById('logoRex');
+            const LOGO_CYB = document.getElementById('logoCyber');
+            const lcd = document.getElementById('lcd');
+            const beltsSvg = document.getElementById('beltsSvg');
+            const itemsLayer = document.getElementById('itemsLayer');
+            const heroEl = document.getElementById('hero');
+            const overlay = document.getElementById('overlay');
+            const overlayTitle = document.getElementById('overlayTitle');
+            const levelToast = document.getElementById('levelToast');
+            const toastNum = document.getElementById('toastNum');
+            const flash = document.getElementById('flash');
+            const btnStart = document.getElementById('btnStart');
+            const btnStartCap = document.getElementById('btnStartCap');
+            const btnReset = document.getElementById('btnReset');
+            const sfxSwitch = document.getElementById('sfxSwitch');
+            const shell = document.getElementById('shell');
+            const sfxSwitchHeader = document.getElementById('sfxSwitchHeader');
+            const sfxLabelHeader = document.getElementById('sfxLabelHeader');
+            const promoModal = document.getElementById('promoModal');
+            const promoCode = document.getElementById('promoCode');
+
+            // BACKGROUND MUSIC
+            const bgMusic = new Audio('Kim Lightyear Legends (2).mp3');
+            bgMusic.loop = true;
+            bgMusic.volume = 0.2;
+            let musicPlaying = false;
+
+            function startMusic()
+            {
+                if (!muted && !musicPlaying)
+                {
+                    bgMusic.play().catch(() => { });
+                    musicPlaying = true;
+                }
+            }
+
+            function stopMusic()
+            {
+                if (musicPlaying)
+                {
+                    bgMusic.pause();
+                    bgMusic.currentTime = 0;
+                    musicPlaying = false;
+                }
+            }
+
+            const SCORE = document.getElementById('score');
+            const MISS = document.getElementById('miss');
+            const LVL = document.getElementById('lvl');
+            const LVLBAR = document.getElementById('lvlbar');
+            const TIME_DESK = document.getElementById('timeDesk');
+            const RULES = document.getElementById('rules');
+
+            // Mobile counters
+            const SCORE_M = document.getElementById('score_m');
+            const MISS_M = document.getElementById('miss_m');
+            const LVL_M = document.getElementById('lvl_m');
+            const TIME_M = document.getElementById('time_m');
+
+            const MOBILE_COUNTERS_WRAP = document.getElementById('mobileCounters');
+            const JOY_WRAP = document.getElementById('joyWrap');
+            const JOYSTICK = document.getElementById('joystick');
+            const DESKTOP_JOYSTICK = document.getElementById('desktopJoystick');
+            const LOGOS_M = document.getElementById('logosMobile');
+
+            const CONVEYOR_SRC = 'https://i.ibb.co/N6xK04Fk/Conveyor-Pixel.png';
+            const REX_SRC = 'https://i.ibb.co/Jj6N70J6/rex-1.png';
+            const SUGAR_SRC = 'https://i.ibb.co/BKZdp3Hj/sugar.png';
+            const HERO_UP = 'https://i.ibb.co/GQmFdSqw/upper-1.png';
+            const HERO_DOWN = 'https://i.ibb.co/C34XsNyb/under-1.png';
+
+            const lcdW = 760, lcdH = 460;
+            const X_L = 4, X_R = lcdW - 4; const X_C = Math.round(lcdW / 2);
+            const GAP = 300; const X_CL = X_C - GAP / 2; const X_CR = X_C + GAP / 2;
+            const Y_TOP = 130, Y_BOTTOM = 330;
+            const BELT_H = 40;
+            const DASH_L = 16, DASH_G = 24; const DASH_CYCLE = DASH_L + DASH_G;
+
+            // GAME STATE
+            let running = false, on = true;
+            let score = 0, miss = 0, level = 1;
+            const TOTAL_MS = 3*60*1000, TOTAL_LEVELS = 3;
+            const perLevelMs = TOTAL_MS / TOTAL_LEVELS; // 180 секунд общий таймер, 3 уровня
+            let elapsed = 0; // ms
+            let progress = 0; // 0..1
+            let items = []; // {id,side:'L'|'R', lane:0|1, t:0..1, kind:'bar'|'sugar'}
+            let nextId = 1;
+            let lastT = null;
+            let spawnT = 0;
+            let raf = 0;
+            let dancing = false;
+            let shaking = false;
+            let danceInterval = null;
+            let explosionInterval = null;
+            let autoPlay = false; // Режим оставлен в коде, UI удалён
+            let muted = false;
+
+            // ===== РЕНДЕР СЕМИСЕГМЕНТНЫХ ЦИФР =====
+            function renderSeg(el, value, digits = 4, w = 30, h = 60)
+            {
+                const str = String(value).padStart(digits, '0').slice(-digits);
+                el.textContent = '';
+
+                for (const ch of str)
+                {
+                    const d = document.createElement('span');
+                    d.className = 'digit';
+                    d.style.width = (w / 8) + 'vmin';
+                    d.style.height = (h / 8) + 'vmin';
+                    d.style.position = 'relative';
+                    d.style.display = 'inline-block';
+
+                    const thick = Math.max(Math.round(h / 20));
+                    const long = Math.round(w - thick * 2);
+                    const short = Math.round(h / 2 - thick * 2);
+
+                    const on = (name) =>
+                    {
+                        const seg = document.createElement('div');
+                        seg.style.position = 'absolute';
+                        seg.style.borderRadius = '9999px';
+                        seg.style.background = '#7b1c1c';
+                        seg.style.opacity = '.2';
+
+                        if (name === 'a' || name === 'd' || name === 'g')
+                        {
+                            seg.style.width = (long / 8) + 'vmin';
+                            seg.style.height = (thick / 8) + 'vmin';
+                            seg.style.left = (thick / 2 / 8) + 'vmin';
+                            const top = (name === 'a' ? 0 : (name === 'g' ? Math.round(h / 2) : h - thick));
+                            seg.style.top = (top / 8) + 'vmin';
+                        }
+                        else
+                        {
+                            seg.style.width = (thick / 8) + 'vmin';
+                            seg.style.height = (short / 8) + 'vmin';
+                            const top = ((name === 'b' || name === 'f') ? (thick / 2) : (h - short - thick / 2));
+                            seg.style.top = (top / 8) + 'vmin';
+                            seg.style[name === 'b' || name === 'c' ? 'right' : 'left'] = '0';
+                        }
+
+                        return seg;
+                    };
+
+                    const map =
+                    {
+                        "0": ["a", "b", "c", "d", "e", "f"],
+                        "1": ["b", "c"],
+                        "2": ["a", "b", "g", "e", "d"],
+                        "3": ["a", "b", "g", "c", "d"],
+                        "4": ["f", "g", "b", "c"],
+                        "5": ["a", "f", "g", "c", "d"],
+                        "6": ["a", "f", "g", "e", "c", "d"],
+                        "7": ["a", "b", "c"],
+                        "8": ["a", "b", "c", "d", "e", "f", "g"],
+                        "9": ["a", "b", "c", "d", "f", "g"]
+                    }[ch] || [];
+
+                    const setOn = new Set(map);
+                    const names = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+
+                    for (const n of names)
+                    {
+                        const s = on(n);
+
+                        if (setOn.has(n))
+                        {
+                            s.style.opacity = '.95';
+                            s.style.boxShadow = '0 0 0.75vmin #7b1c1c';
+                        }
+
+                        d.appendChild(s);
+                    }
+
+                    el.appendChild(d);
+                }
+            }
+            // mm:ss
+            function renderTime(el, ms, w = 24, h = 50)
+            {
+                const s = Math.max(0, Math.floor(ms / 1000));
+                const m = Math.floor(s / 60);
+                const sec = String(s % 60).padStart(2, '0');
+                el.textContent = '';
+                renderSeg(el, m, 1, w, h);
+
+                // двоеточие
+                const colon = document.createElement('span');
+                colon.style.display = 'inline-block';
+                colon.style.width = Math.round(w / 2 / 8) + 'vmin';
+                colon.style.textAlign = 'center';
+                colon.style.fontWeight = '900';
+                colon.style.userSelect = 'none';
+                colon.textContent = ':';
+
+                el.appendChild(colon);
+                renderSeg(el, sec, 2, w, h);
+            }
+
+            // SOUND (WebAudio)
+            const ctxRef = { current: null };
+
+            function ensureCtx()
+            {
+                if (!ctxRef.current)
+                {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+
+                    if (AC)
+                        ctxRef.current = new AC();
+                }
+
+                if (ctxRef.current && ctxRef.current.state === 'suspended')
+                {
+                    ctxRef.current.resume();
+                }
+            }
+
+            function beep(f = 440, t = 0.08, type = 'square', vol = 0.15)
+            {
+                if (muted)
+                    return;
+
+                ensureCtx();
+                const ac = ctxRef.current;
+
+                if (!ac)
+                    return;
+
+                const o = ac.createOscillator();
+                const g = ac.createGain();
+
+                o.type = type;
+                o.frequency.setValueAtTime(f, ac.currentTime);
+                g.gain.setValueAtTime(vol, ac.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t);
+                o.connect(g).connect(ac.destination);
+                o.start();
+                o.stop(ac.currentTime + t);
+            }
+
+            function chord(arr = [440, 660, 880], t = 0.18)
+            {
+                arr.forEach((f, i) => setTimeout(() => beep(f, t, 'square', 0.12), i * 30));
+            }
+
+            function sfx(name)
+            {
+                // Telegram Haptic Feedback
+                if (tg && tg.HapticFeedback) {
+                    switch (name) {
+                        case 'click':
+                            tg.HapticFeedback.impactOccurred('light');
+                            break;
+                        case 'good':
+                            tg.HapticFeedback.notificationOccurred('success');
+                            break;
+                        case 'bad':
+                            tg.HapticFeedback.notificationOccurred('error');
+                            break;
+                        case 'level':
+                            tg.HapticFeedback.impactOccurred('medium');
+                            break;
+                        case 'end':
+                            tg.HapticFeedback.notificationOccurred('success');
+                            break;
+                        case 'gameover':
+                            tg.HapticFeedback.notificationOccurred('error');
+                            break;
+                    }
+                }
+
+                if (muted)
+                    return;
+
+                ensureCtx();
+
+                switch (name)
+                {
+                    case 'click':
+                        beep(380, 0.06, 'square', 0.12);
+                        break;
+                    case 'good':
+                        chord([620, 930, 1240], 0.10);
+                        break;
+                    case 'bad':
+                        beep(180, 0.18, 'sawtooth', 0.20);
+                        setTimeout(() => beep(140, 0.20, 'sawtooth', 0.16), 90);
+                        break;
+                    case 'level':
+                        chord([520, 780, 1040], 0.12);
+                        break;
+                    case 'end':
+                        chord([440, 660, 880, 990, 1320], 0.14);
+                        break;
+                    case 'gameover':
+                        beep(220, 0.18, 'square', 0.20);
+                        setTimeout(() => beep(160, 0.22, 'square', 0.18), 120);
+                        setTimeout(() => beep(120, 0.26, 'sawtooth', 0.16), 240);
+                        break;
+                }
+            }
+
+            // HERO
+            const hero =
+            {
+                face: 'L',
+                armsUp: true
+            };
+
+            const heroUpImg = new Image();
+            heroUpImg.src = HERO_UP;
+            const heroDownImg = new Image();
+            heroDownImg.src = HERO_DOWN;
+
+            function renderHero()
+            {
+                heroEl.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = hero.armsUp ? HERO_UP : HERO_DOWN;
+                img.alt = 'hero';
+                img.style.imageRendering = 'pixelated';
+                img.style.userSelect = 'none';
+                const baseHeight = hero.armsUp ? REFERENCE_HERO_UP : REFERENCE_HERO_DOWN;
+                img.style.height = (baseHeight * currentScale) + 'px';
+                img.style.transformOrigin = 'bottom center';
+                img.style.transform = (hero.face === 'R') ? 'scaleX(-1)' : 'none';
+                const baseOffsetPct = REFERENCE_HERO_DOWN - baseHeight;
+                const horizontalOffset = hero.face === 'L' ? `-75%` : `-25%`;
+                heroEl.style.transform = `translate(${horizontalOffset}, calc(-${10 * currentScale}px + ${baseOffsetPct * currentScale}px))`;
+                if (dancing) { img.classList.add('dance'); } else { img.classList.remove('dance'); }
+                heroEl.appendChild(img);
+            }
+
+            // BELTS SVG - SCALED
+            function addBelt(a, b, dir, scale)
+            {
+                const scaledBeltH = Math.round(REFERENCE_BELT_H * scale);
+                const scaledDashL = Math.round(8 * scale);
+                const scaledDashG = Math.round(6 * scale);
+                const scaledDashCycle = scaledDashL + scaledDashG;
+                const dx = b.x - a.x, dy = b.y - a.y;
+                const len = Math.hypot(dx, dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${a.x} ${a.y}) rotate(${angle})`);
+
+                const clipId = 'clip-' + Math.random().toString(36).slice(2);
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+
+                const clip = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+                clip.setAttribute('id', clipId);
+
+                const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                r.setAttribute('x', '0'); r.setAttribute('y', (-scaledBeltH / 2));
+                r.setAttribute('width', len);
+                r.setAttribute('height', scaledBeltH);
+                r.setAttribute('rx', scaledBeltH / 2);
+                clip.appendChild(r);
+                defs.appendChild(clip);
+                g.appendChild(defs);
+
+                const clipG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                clipG.setAttribute('clip-path', `url(#${clipId})`);
+
+                const img = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', CONVEYOR_SRC);
+                img.setAttribute('x', '0');
+                img.setAttribute('y', (-scaledBeltH / 2));
+                img.setAttribute('width', len);
+                img.setAttribute('height', scaledBeltH);
+                img.setAttribute('preserveAspectRatio', 'none');
+                clipG.appendChild(img);
+                g.appendChild(clipG);
+
+                const stroke = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                stroke.setAttribute('x', '0');
+                stroke.setAttribute('y', (-scaledBeltH / 2));
+                stroke.setAttribute('width', len);
+                stroke.setAttribute('height', scaledBeltH);
+                stroke.setAttribute('rx', scaledBeltH / 2);
+                stroke.setAttribute('fill', 'none');
+                stroke.setAttribute('stroke', '#111');
+                stroke.setAttribute('stroke-width', Math.round(4));
+                g.appendChild(stroke);
+
+                const outline = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                outline.classList.add('belt-outline');
+                outline.setAttribute('x', '-2');
+                outline.setAttribute('y', (-scaledBeltH / 2 - 6));
+                outline.setAttribute('width', len + 4);
+                outline.setAttribute('height', scaledBeltH + 12);
+                outline.setAttribute('rx', (scaledBeltH + 12) / 2);
+                outline.style.strokeWidth = Math.round(8 * scale) + 'px';
+                outline.style.strokeDasharray = `${scaledDashL} ${scaledDashG}`;
+                outline.style.setProperty('--dash-cycle', String(scaledDashCycle));
+
+                g.appendChild(outline);
+                beltsSvg.appendChild(g);
+                return { outline, len, dir };
+            }
+
+            let belts = [];
+            function createBelts()
+            {
+                beltsSvg.innerHTML = '';
+                belts = [];
+                const targetHeight = Math.round(lcd.offsetHeight / lcd.offsetWidth * REFERENCE_LCD_W);
+                beltsSvg.setAttribute('viewBox', `0 0 ${REFERENCE_LCD_W} ${targetHeight}`);
+                var scale = Math.round(lcd.offsetHeight / lcd.offsetWidth * REFERENCE_LCD_W) / REFERENCE_LCD_H;
+                const coords = getScaledCoords(scale);
+                scale = scale * scale;
+                belts =
+                [
+                    addBelt({ x: coords.scaledXL, y: coords.scaledYTop }, { x: coords.scaledXCL, y: coords.scaledYTop }, 'LR', scale),
+                    addBelt({ x: coords.scaledXL, y: coords.scaledYBottom }, { x: coords.scaledXCL, y: coords.scaledYBottom }, 'LR', scale),
+                    addBelt({ x: coords.scaledXR, y: coords.scaledYTop }, { x: coords.scaledXCR, y: coords.scaledYTop }, 'RL', scale),
+                    addBelt({ x: coords.scaledXR, y: coords.scaledYBottom }, { x: coords.scaledXCR, y: coords.scaledYBottom }, 'RL', scale),
+                ];
+            }
+            function setBeltAnimRunning(isRunning, duration)
+            {
+                for (const b of belts)
+                {
+                    const dirSign = (b.dir === 'LR') ? 1 : -1;
+                    const dur = Math.max(.04, dashDurFrom(b.len, duration, DASH_CYCLE));
+                    b.outline.style.animation = isRunning ? `dashRun ${dur}s linear infinite` : 'none';
+                    b.outline.style.animationDirection = dirSign === -1 ? 'normal' : 'reverse';
+                }
+            }
+
+            // ITEMS
+            function spawnOne()
+            {
+                const side = Math.random() < .5 ? 'L' : 'R';
+                const lane = Math.random() < .5 ? 0 : 1;
+                const kind = (Math.random() < difficulty().sugarProb) ? 'sugar' : 'bar';
+                const activeItems = items.filter(item => item.side === side && item.t < 1.0);
+
+                if (activeItems.length >= 1)
+                    return;
+
+                const nearFallingItems = items.filter(item => item.side === side && item.t >= 1.0 && item.t < 1.7);
+
+                for (const existing of nearFallingItems)
+                {
+                    if (existing.kind !== kind)
+                    {
+                        if ((existing.lane === 0 && existing.kind === 'sugar' && lane === 1 && kind === 'bar') ||
+                            (existing.lane === 1 && existing.kind === 'sugar' && lane === 0 && kind === 'bar')) return;
+
+                        if ((existing.lane === 0 && existing.kind === 'bar' && lane === 1 && kind === 'sugar') ||
+                            (existing.lane === 1 && existing.kind === 'bar' && lane === 0 && kind === 'sugar')) return;
+                    }
+                }
+
+                items.push({ id: nextId++, side, lane, t: 0, kind });
+            }
+
+            function itemBottomY(y)
+            {
+                return y - 5;
+            }
+
+            function renderItems()
+            {
+                itemsLayer.innerHTML = '';
+                const pctX = (px) => (px / REFERENCE_LCD_W * 100).toFixed(4) + '%';
+                const pctY = (px) => (px / REFERENCE_LCD_H * 100).toFixed(4) + '%';
+
+                for (const it of items)
+                {
+                    const p = posOnTrack(it.side, it.lane, it.t);
+                    const el = document.createElement('div');
+                    el.className = 'abs';
+                    el.style.left = pctX(p.x);
+                    el.style.transform = 'translateX(-50%)';
+                    el.style.zIndex = 5;
+
+                    const img = document.createElement('img');
+                    img.style.imageRendering = 'pixelated';
+                    img.style.display = 'block';
+
+                    let rotation = 0;
+
+                    if (it.t > 1.0 && it.t <= 1.4)
+                    {
+                        const fallProgress = (it.t - 1.0) / 0.4;
+                        const rotationDirection = it.side === 'L' ? 90 : -90;
+                        const easedProgress = 1 - Math.pow(1 - fallProgress, 3);
+                        rotation = easedProgress * rotationDirection;
+                    }
+                    else if (it.t > 1.4)
+                    {
+                        rotation = it.side === 'L' ? 90 : -90;
+                    }
+
+                    if (it.kind === 'bar')
+                    {
+                        img.src = REX_SRC;
+                        img.style.height = (REFERENCE_BAR_H * currentScale) + 'px'; // абсолютный размер с учетом масштаба
+                        img.style.width = 'auto';
+                        img.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : 'none';
+                        img.style.transformOrigin = 'center center';
+                        const topPx = itemBottomY(p.y) - REFERENCE_BAR_H; el.style.top = pctY(topPx);
+                    }
+                    else
+                    {
+                        img.src = SUGAR_SRC;
+                        img.style.height = (REFERENCE_SUGAR * currentScale) + 'px'; // абсолютный размер с учетом масштаба
+                        img.style.width = 'auto';
+                        img.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : 'none';
+                        img.style.transformOrigin = 'center center';
+                        const topPx = itemBottomY(p.y) - REFERENCE_SUGAR; el.style.top = pctY(topPx);
+                    }
+
+                    el.appendChild(img);
+                    itemsLayer.appendChild(el);
+                }
+            }
+
+            // DIFFICULTY
+            function clamp(v, a, b)
+            {
+                return Math.max(a, Math.min(b, v));
+            }
+
+            function lerp(a, b, t)
+            {
+                return a + (b - a) * t;
+            }
+
+            function difficulty()
+            {
+                const L = clamp(level, 1, 3);
+
+                if (L === 1)
+                {
+                    const t1 = clamp(progress, 0, 1);
+                    return {
+                        spawnEvery: Math.round(lerp(1600, 1400, t1)),
+                        duration: lerp(2.2, 2.0, t1),
+                        sugarProb: lerp(0.05, 0.10, t1)
+                    };
+                }
+                else if (L === 2)
+                {
+                    const t2 = clamp(progress, 0, 1);
+                    return {
+                        spawnEvery: Math.round(lerp(1200, 1000, t2)),
+                        duration: lerp(1.8, 1.5, t2),
+                        sugarProb: lerp(0.15, 0.25, t2)
+                    };
+                }
+                else
+                {
+                    const t3 = clamp(progress, 0, 1);
+                    return {
+                        spawnEvery: Math.round(lerp(900, 600, t3)),
+                        duration: lerp(1.4, 1.0, t3),
+                        sugarProb: lerp(0.30, 0.45, t3)
+                    };
+                }
+            }
+
+            function msToClock(ms)
+            {
+                const s = Math.max(0, Math.floor(ms / 1000));
+                const m = Math.floor(s / 60);
+                const sec = String(s % 60).padStart(2, '0');
+                return `${m}:${sec}`;
+            }
+
+            function dashDurFrom(len, duration, cycle)
+            {
+                const v = len / Math.max(0.001, duration);
+                return cycle / Math.max(1, v);
+            }
+
+            // STATE/UI
+            function reset()
+            {
+                items = [];
+                score = 0;
+                miss = 0;
+                level = 1;
+                elapsed = 0;
+                progress = 0;
+                hero.face = 'L';
+                hero.armsUp = true;
+                running = false;
+                dancing = false;
+                lastT = null;
+                spawnT = 0;
+
+                if (danceInterval)
+                {
+                    clearInterval(danceInterval);
+                    danceInterval = null;
+                }
+
+                if (explosionInterval)
+                {
+                    clearInterval(explosionInterval);
+                    explosionInterval = null;
+                }
+
+                beltsSvg.style.display = 'block';
+                stopMusic();
+                updateUI();
+                overlay.style.display = 'grid';
+                updateMobileUI();
+                btnStartCap.textContent = 'СТАРТ';
+                promoModal.style.display = 'none';
+            }
+
+            function updateUI()
+            {
+                // сегменты крупные на десктопе
+                renderSeg(SCORE, score, 3, 30, 60);
+                renderSeg(MISS, miss, 1, 30, 60);
+                renderSeg(LVL, level, 1, 30, 60);
+                LVLBAR.style.width = Math.round(progress * 100) + '%';
+                renderTime(TIME_DESK, TOTAL_MS - elapsed, 24, 50); // показать общее оставшееся время из 180 секунд
+
+                //const rect = shell.getBoundingClientRect();
+                //const actualWidth = rect.width; const actualHeight = rect.height;
+                const scale = 1;//Math.min(actualWidth, actualHeight) / (100 * 4);
+
+                // мобильные мини-сегменты (всегда обновляем)
+                renderSeg(SCORE_M, score, 3, 20 * scale, 40 * scale);
+                renderSeg(MISS_M, miss, 1, 20 * scale, 40 * scale);
+                renderSeg(LVL_M, level, 1, 20 * scale, 40 * scale);
+                renderTime(TIME_M, TOTAL_MS - elapsed, 18 * scale, 36 * scale); // мобильный общий таймер 180 секунд
+
+                renderHero();
+                renderItems();
+            }
+
+            function startPause()
+            {
+                const ended = (elapsed >= TOTAL_MS) || (miss >= 3);
+
+                if (ended)
+                {
+                    reset();
+                    running = true;
+                    overlay.style.display = 'none';
+                    loopStart();
+                    btnStartCap.textContent = 'ПАУЗА';
+                    startMusic();
+                    sfx('click');
+                    return;
+                }
+
+                running = !running;
+                btnStartCap.textContent = running ? 'ПАУЗА' : 'СТАРТ';
+
+                if (running)
+                {
+                    overlay.style.display = 'none';
+                    loopStart();
+                    startMusic();
+                }
+                else
+                {
+                    overlay.style.display = 'grid';
+                    updateMobileUI();
+                    stopMusic();
+
+                    if (raf)
+                        cancelAnimationFrame(raf);
+
+                    setBeltAnimRunning(false, difficulty().duration);
+                }
+
+                RULES.style.display = 'none';
+                sfx('click');
+            }
+
+            function loopStart()
+            {
+                if (raf)
+                    cancelAnimationFrame(raf);
+
+                lastT = null;
+                setBeltAnimRunning(true, difficulty().duration);
+                raf = requestAnimationFrame(step);
+            }
+
+            function step(t)
+            {
+                if (!running)
+                {
+                    return;
+                }
+
+                if (lastT == null)
+                    lastT = t;
+
+                const dt = (t - lastT) / 1000;
+                lastT = t;
+
+                elapsed = Math.min(elapsed + dt * 1000, TOTAL_MS);
+                const lvl = clamp(1 + Math.floor(elapsed / perLevelMs), 1, TOTAL_LEVELS);
+
+                if (lvl !== level)
+                {
+                    level = lvl;
+                    miss = 0;
+                    toast(`LEVEL ${level}`);
+                    sfx('level');
+                }
+
+                progress = elapsed / TOTAL_MS;
+
+                spawnT += dt * 1000;
+
+                if (spawnT >= difficulty().spawnEvery)
+                {
+                    spawnT = 0;
+                    spawnOne();
+                }
+
+                if (autoPlay)
+                {
+                    let targetBar = null, targetSugar = null;
+
+                    for (const it of items)
+                    {
+                        if (it.t < 1.5)
+                        {
+                            if (it.kind === 'bar')
+                            {
+                                if (!targetBar || it.t > targetBar.t)
+                                    targetBar = it;
+                            }
+                            else
+                            {
+                                if (!targetSugar || it.t > targetSugar.t)
+                                    targetSugar = it;
+                            }
+                        }
+                    }
+
+                    if (targetBar && targetBar.t > 0.4)
+                    {
+                        hero.face = targetBar.side;
+                        hero.armsUp = (targetBar.lane === 0);
+                    }
+                    else if (targetSugar && targetSugar.t > 0.65)
+                    {
+                        hero.face = (targetSugar.side === 'L' ? 'R' : 'L');
+                        hero.armsUp = (targetSugar.lane !== 0);
+                    }
+                }
+
+                const dur = difficulty().duration;
+                const updated = [];
+                let got = 0, bad = 0;
+
+                for (const it of items)
+                {
+                    const t2 = it.t + dt / dur;
+                    const faceOK = (it.side === 'L' && hero.face === 'L') || (it.side === 'R' && hero.face === 'R');
+                    let catchThreshold, armsOK;
+
+                    if (it.lane === 0)
+                    {
+                        if (t2 >= 1.2 && t2 <= 1.5 && hero.armsUp)
+                        {
+                            catchThreshold = 1.2;
+                            armsOK = true;
+                        }
+                        else if (!hero.armsUp)
+                        {
+                            const heightDiff = REFERENCE_Y_BOTTOM - REFERENCE_Y_TOP;
+                            const extraFallDistance = 50;
+                            const fallSpeed = 500;
+                            const fallTime = (heightDiff + extraFallDistance) / fallSpeed;
+                            const upperFallStart = 1.0;
+                            const upperAtLowerLevel = upperFallStart + fallTime;
+
+                            if (t2 >= upperAtLowerLevel && t2 <= upperAtLowerLevel + 0.3)
+                            {
+                                catchThreshold = upperAtLowerLevel;
+                                armsOK = true;
+                            }
+                            else
+                            {
+                                catchThreshold = 999;
+                                armsOK = false;
+                            }
+                        }
+                        else
+                        {
+                            catchThreshold = 999;
+                            armsOK = false;
+                        }
+                    }
+                    else
+                    {
+                        if (t2 >= 1.1 && t2 <= 1.4 && !hero.armsUp)
+                        {
+                            catchThreshold = 1.1; armsOK = true;
+                        }
+                        else
+                        {
+                            catchThreshold = 999; armsOK = false;
+                        }
+                    }
+
+                    const matched = faceOK && armsOK;
+                    const pos = posOnTrack(it.side, it.lane, t2);
+                    const lcdHeight = REFERENCE_LCD_H;
+
+                    if (t2 >= catchThreshold && matched)
+                    {
+                        if (it.kind === 'bar')
+                            got++;
+                        else if (it.kind === 'sugar')
+                            bad++;
+                    }
+
+                    else if (t2 >= 2.5 || pos.y > lcdHeight + 50)
+                    {
+                        if (!matched && it.kind === 'bar')
+                            bad++;
+                    }
+                    else
+                    {
+                        updated.push(Object.assign({}, it, { t: t2 }));
+                    }
+                }
+
+                items = updated;
+
+                if (got)
+                {
+                    score += got;
+                    flashFx('good');
+                    sfx('good');
+                }
+
+                if (bad)
+                {
+                    miss = Math.min(3, miss + bad);
+                    flashFx('bad');
+                    sfx('bad');
+                    shell.classList.add('shake');
+                    setTimeout(() => shell.classList.remove('shake'), 300);
+                }
+
+                setBeltAnimRunning(true, dur);
+
+                if (miss >= 3)
+                {
+                    running = false;
+                    stopMusic();
+                    sfx('gameover');
+                    overlay.style.display = 'grid';
+                    overlayTitle.textContent = 'ИГРА ОКОНЧЕНА';
+                    setBeltAnimRunning(false, dur);
+                    renderItems(); updateUI();
+                    btnStartCap.textContent = 'СТАРТ';
+                    return;
+                }
+
+                if (elapsed >= TOTAL_MS)
+                {
+                    running = false;
+                    dancing = true;
+                    stopMusic();
+                    sfx('end');
+                    overlay.style.display = 'none';
+                    overlayTitle.textContent = 'ПОЗДРАВЛЯЕМ С ПОБЕДОЙ!';
+                    setBeltAnimRunning(false, dur);
+                    beltsSvg.style.display = 'none';
+                    items.length = 0;
+                    renderItems();
+                    updateUI();
+                    btnStartCap.textContent = 'СТАРТ';
+                    createBarExplosion();
+                    setTimeout(() =>
+                    {
+                        promoModal.style.display = 'grid';
+                    }, 3000);
+                    danceInterval = setInterval(() =>
+                    {
+                        hero.armsUp = true;
+                        hero.face = hero.face === 'L' ? 'R' : 'L';
+                        renderHero();
+                    }, 600);
+                    explosionInterval = setInterval(() =>
+                    {
+                        createBarExplosion();
+                    }, 800);
+                    return;
+                }
+
+                //renderItems(); renderHero();
+                // обновляем счётчики в одном месте
+                //renderSeg(SCORE, score, 3, 30, 60); renderSeg(MISS, miss, 1, 30, 60); renderSeg(LVL, level, 1, 30, 60); LVLBAR.style.width=Math.round(progress*100)+'%'; renderTime(TIME_DESK, TOTAL_MS - elapsed, 24, 50); // общий таймер 180с
+                // мобильные счетчики всегда обновляем
+                //renderSeg(SCORE_M, score, 3, 20, 40); renderSeg(MISS_M, miss, 1, 20, 40); renderSeg(LVL_M, level, 1, 20, 40); renderTime(TIME_M, TOTAL_MS - elapsed, 18, 36); // мобильный общий таймер 180с
+                updateUI();
+                LVLBAR.style.width = Math.round(progress * 100) + '%';
+                raf = requestAnimationFrame(step);
+            }
+
+            function toast(txt)
+            {
+                toastNum.textContent = String(level);
+                levelToast.style.display = 'flex';
+                setTimeout(() =>
+                {
+                    levelToast.style.display = 'none';
+                }, 1100);
+            }
+
+            function flashFx(kind)
+            {
+                flash.style.background = (kind === 'good')
+                    ? 'radial-gradient(circle at 50% 50%, rgba(16,185,129,.35), rgba(16,185,129,0) 55%)'
+                    : 'radial-gradient(circle at 50% 50%, rgba(239,68,68,.35), rgba(239,68,68,0) 55%)';
+
+                clearTimeout(flash._t); flash._t = setTimeout(() =>
+                {
+                    flash.style.background = 'transparent';
+                }, 160);
+            }
+
+            // Анимация фейерверков по всему экрану
+            function createBarExplosion()
+            {
+                const lcdRect = lcd.getBoundingClientRect();
+                const lcdWidth = lcdRect.width;
+                const lcdHeight = lcdRect.height;
+                
+                // Создаем 2-3 случайных фейерверка одновременно
+                const fireworksCount = 2 + Math.floor(Math.random() * 2);
+                
+                for (let f = 0; f < fireworksCount; f++)
+                {
+                    // Случайная позиция фейерверка на экране (избегаем краев)
+                    const fireworkX = 80 + Math.random() * (lcdWidth - 160);
+                    const fireworkY = 60 + Math.random() * (lcdHeight - 120);
+                    
+                    // Каждый фейерверк содержит 4-6 батончиков
+                    const particlesCount = 4 + Math.floor(Math.random() * 3);
+                    
+                    for (let i = 0; i < particlesCount; i++)
+                    {
+                        const particle = document.createElement('img');
+                        particle.src = REX_SRC;
+                        particle.className = 'bar-particle';
+                        particle.style.position = 'absolute';
+                        particle.style.left = fireworkX + 'px';
+                        particle.style.top = fireworkY + 'px';
+                        particle.style.width = (35 + Math.random() * 40) + 'px'; // Разные размеры
+                        particle.style.height = 'auto';
+                        particle.style.imageRendering = 'pixelated';
+                        particle.style.pointerEvents = 'none';
+                        particle.style.zIndex = '3'; // За героем (герой имеет zIndex 5)
+                        
+                        // Случайное направление разлета
+                        const angle = Math.random() * 360 * (Math.PI / 180);
+                        const distance = 100 + Math.random() * 200;
+                        const flyX = Math.cos(angle) * distance;
+                        const flyY = Math.sin(angle) * distance;
+                        const rotation = Math.random() * 720 - 360;
+                        
+                        particle.style.setProperty('--fly-x', flyX + 'px');
+                        particle.style.setProperty('--fly-y', flyY + 'px');
+                        particle.style.setProperty('--fly-rot', rotation + 'deg');
+                        particle.style.animation = 'barFly 2.8s ease-out forwards';
+                        
+                        lcd.appendChild(particle);
+                        
+                        setTimeout(() =>
+                        {
+                            if (particle.parentNode) particle.parentNode.removeChild(particle);
+                        }, 2800);
+                    }
+                }
+            }
+
+            // Копирование промокода в буфер обмена
+            function copyPromoCode()
+            {
+                const textToCopy = 'ROBOGOZIN';
+                if (navigator.clipboard)
+                {
+                    navigator.clipboard.writeText(textToCopy).then(() =>
+                    {
+                        promoCode.textContent = 'Скопировано!';
+                        promoCode.style.background = '#10b981';
+                        setTimeout(() =>
+                        {
+                            promoCode.textContent = 'ROBOGOZIN';
+                            promoCode.style.background = '#000';
+                        }, 1000);
+                    }).catch(() =>
+                    {
+                        // Fallback для старых браузеров
+                        fallbackCopyTextToClipboard(textToCopy);
+                    });
+                }
+                else
+                {
+                    fallbackCopyTextToClipboard(textToCopy);
+                }
+            }
+
+            function fallbackCopyTextToClipboard(text)
+            {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try
+                {
+                    document.execCommand('copy');
+                    promoCode.textContent = 'Скопировано!';
+                    promoCode.style.background = '#10b981';
+                    setTimeout(() =>
+                    {
+                        promoCode.textContent = 'ROBOGOZIN';
+                        promoCode.style.background = '#000';
+                    }, 1000);
+                }
+                catch (err)
+                {
+                    console.error('Не удалось скопировать текст', err);
+                }
+                document.body.removeChild(textArea);
+            }
+
+            // INPUTS
+            btnStart.addEventListener('click', () =>
+            {
+                ensureCtx();
+                startPause();
+            });
+
+            btnReset.addEventListener('click', () =>
+            {
+                ensureCtx();
+                reset();
+                updateUI();
+            });
+
+            // Промокод клик
+            promoCode.addEventListener('click', copyPromoCode);
+
+            // Закрытие модального окна по клику вне него
+            promoModal.addEventListener('click', (e) =>
+            {
+                if (e.target === promoModal)
+                {
+                    promoModal.style.display = 'none';
+                }
+            });
+
+            const sfxLabel = document.getElementById('sfxLabel');
+            sfxSwitch.addEventListener('click', () =>
+            {
+                muted = !muted;
+                sfxSwitch.classList.toggle('on', !muted);
+                sfxLabel.textContent = muted ? 'ЗВУК: OFF' : 'ЗВУК: ON';
+
+                if (muted && musicPlaying)
+                {
+                    stopMusic();
+                }
+                else if (!muted && running)
+                {
+                    startMusic();
+                }
+
+                sfx('click');
+            });
+
+            // ===== Переключатель мобайл-превью =====
+            function setForceMobile(on)
+            {
+                document.body.classList.toggle('force-mobile', on);
+                document.documentElement.classList.toggle('force-mobile', on);
+
+                updateScale();
+
+                if (running)
+                    setBeltAnimRunning(true, difficulty().duration);
+            }
+            //if (mobilePreviewSwitch) {
+
+            //}
+
+            window.addEventListener('keydown', (e) =>
+            {
+                const k = e.key.toLowerCase();
+
+                if (e.key.startsWith('Arrow') || ['w', 'a', 's', 'd', ' '].includes(k))
+                    e.preventDefault();
+
+                if (k === 'a' || e.key === 'ArrowLeft')
+                    hero.face = 'L';
+
+                if (k === 'd' || e.key === 'ArrowRight')
+                    hero.face = 'R';
+
+                if (k === 'w' || e.key === 'ArrowUp')
+                    hero.armsUp = true;
+
+                if (k === 's' || e.key === 'ArrowDown')
+                    hero.armsUp = false;
+
+                if (k === 'r')
+                {
+                    reset();
+                    updateUI();
+                }
+
+                // скрытую клавишу для авто оставим
+                if (k === 't' || k === 'f')
+                {
+                    autoPlay = !autoPlay;
+                }
+
+                if (e.code === 'Space')
+                {
+                    ensureCtx();
+                    startPause();
+                }
+
+                if (k === 'm')
+                {
+                    setForceMobile(!document.body.classList.contains('force-mobile'));
+                }
+            }, { passive: false });
+
+            // Touch control areas baseline
+            function getScaledCoords(scale)
+            {
+                const scaledYTop = Math.round(REFERENCE_Y_TOP * scale);
+                const scaledYBottom = Math.round(REFERENCE_Y_BOTTOM * scale);
+                const scaledXL = Math.round(REFERENCE_X_L);
+                const scaledXR = Math.round(REFERENCE_X_R);
+                const scaledGap = Math.round(REFERENCE_GAP);
+                const scaledXC = Math.round(REFERENCE_LCD_W / 2);
+                const scaledXCL = scaledXC - scaledGap / 2;
+                const scaledXCR = scaledXC + scaledGap / 2;
+                return { scaledYTop, scaledYBottom, scaledXL, scaledXR, scaledXCL, scaledXCR };
+            }
+
+            function posOnTrack(side, lane, t)
+            {
+                const y = lane === 0 ? REFERENCE_Y_TOP : REFERENCE_Y_BOTTOM; // координаты в эталонной системе 760x460
+                if (t <= 1.0)
+                {
+                    if (side === 'L')
+                    {
+                        const x = REFERENCE_X_L + (REFERENCE_LCD_W / 2 - REFERENCE_GAP / 2 - REFERENCE_X_L) * t;
+                        return { x, y };
+                    }
+                    else
+                    {
+                        const x = REFERENCE_X_R - (REFERENCE_X_R - (REFERENCE_LCD_W / 2 + REFERENCE_GAP / 2)) * t;
+                        return { x, y };
+                    }
+                }
+                else
+                {
+                    const fallDistance = (t - 1.0) * 500; // px/сек в эталонных координатах
+                    if (side === 'L')
+                    {
+                        return {
+                            x: (REFERENCE_LCD_W / 2 - REFERENCE_GAP / 2 + Math.min(t - 1.0, 0.2) / 0.2 * 30),
+                            y: y + fallDistance
+                        };
+                    }
+                    else
+                    {
+                        return {
+                            x: (REFERENCE_LCD_W / 2 + REFERENCE_GAP / 2 - Math.min(t - 1.0, 0.2) / 0.2 * 30),
+                            y: y + fallDistance
+                        };
+                    }
+                }
+            }
+
+            // Touch areas scaling
+            function updateTouchAreas()
+            {
+                const touchLeft = document.getElementById('touchLeft');
+                const touchRight = document.getElementById('touchRight');
+                if (touchLeft && touchRight)
+                {
+                    const pctX = (px) => (px / REFERENCE_LCD_W * 100).toFixed(4) + '%';
+                    const pctY = (px) => (px / REFERENCE_LCD_H * 100).toFixed(4) + '%';
+                    touchLeft.style.width = pctX(190);
+                    touchLeft.style.height = pctY(260);
+                    touchLeft.style.top = pctY(100);
+                    touchRight.style.width = pctX(190);
+                    touchRight.style.height = pctY(260);
+                    touchRight.style.top = pctY(100);
+                }
+            }
+
+            // Touch controls
+            const touchLeft = document.getElementById('touchLeft');
+            const touchRight = document.getElementById('touchRight');
+            function isMobile()
+            {
+                //if (document.body.classList.contains('force-mobile')) return true;
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                    || ('ontouchstart' in window && window.innerWidth <= 900);
+            }
+
+            function handleTouch(side, e)
+            {
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.touches ? e.touches[0].clientY : e.clientY;
+                const relativeY = y - rect.top;
+                const isUpper = relativeY < rect.height / 2;
+                hero.face = side;
+                hero.armsUp = isUpper;
+                renderHero();
+            }
+
+            if (touchLeft && touchRight)
+            {
+                touchLeft.addEventListener('touchstart', (e) => handleTouch('L', e), { passive: false });
+                touchLeft.addEventListener('touchmove', (e) => handleTouch('L', e), { passive: false });
+                touchLeft.addEventListener('mousedown', (e) => handleTouch('L', e));
+                touchLeft.addEventListener('mousemove', (e) => { if (e.buttons === 1) handleTouch('L', e); });
+                touchRight.addEventListener('touchstart', (e) => handleTouch('R', e), { passive: false });
+                touchRight.addEventListener('touchmove', (e) => handleTouch('R', e), { passive: false });
+                touchRight.addEventListener('mousedown', (e) => handleTouch('R', e));
+                touchRight.addEventListener('mousemove', (e) => { if (e.buttons === 1) handleTouch('R', e); });
+            }
+
+            // Tap to start for mobile
+            lcd.addEventListener('touchstart', (e) =>
+            {
+                if (isMobile() && !running && elapsed === 0)
+                {
+                    e.preventDefault();
+                    ensureCtx();
+                    startPause();
+                }
+            }, { passive: false });
+
+            // Мобильная/десктопная UI настройка
+            function updateMobileUI()
+            {
+                const mobile = isMobile();
+                if (mobile)
+                {
+                    overlayTitle.textContent = elapsed > 0 ? 'ПАУЗА' : 'ТАПНИТЕ ДЛЯ СТАРТА';
+                    // показать мобильные элементы (счетчики показываются через CSS)
+                    JOY_WRAP.style.display = 'block';
+                    LOGOS_M.style.display = 'flex';
+                }
+                else
+                {
+                    overlayTitle.textContent = elapsed > 0 ? 'ПАУЗА' : 'НАЖМИТЕ \'ПРОБЕЛ\'';
+                    // (счетчики скрываются через CSS)
+                    JOY_WRAP.style.display = 'none';
+                    LOGOS_M.style.display = 'none';
+                }
+            }
+
+            // ===== Джойстик: 4 позиции =====
+            function joySet(dir, arm)
+            {
+                hero.face = dir;
+                hero.armsUp = (arm === 'up');
+                renderHero();
+            }
+
+            function joyFromEvent(e, joystick)
+            {
+                const rect = joystick.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const p = e.touches ? e.touches[0] : e;
+                const dx = p.clientX - cx;
+                const dy = p.clientY - cy;
+                const up = dy < 0;
+                const right = dx > 0;
+                const dir = right ? 'R' : 'L';
+                const arm = up ? 'up' : 'down';
+                return { dir, arm };
+            }
+
+            if (JOYSTICK)
+            {
+                const setFrom = (ev) =>
+                {
+                    const { dir, arm } = joyFromEvent(ev, JOYSTICK);
+                    joySet(dir, arm);
+                };
+
+                JOYSTICK.addEventListener('touchstart', setFrom, { passive: false });
+                JOYSTICK.addEventListener('touchmove', setFrom, { passive: false });
+                JOYSTICK.addEventListener('mousedown', setFrom);
+                JOYSTICK.addEventListener('mousemove', (e) => { if (e.buttons === 1) setFrom(e); });
+            }
+
+            // Десктопный джойстик
+            if (DESKTOP_JOYSTICK)
+            {
+                const setFromDesktop = (ev) =>
+                {
+                    const { dir, arm } = joyFromEvent(ev, DESKTOP_JOYSTICK);
+                    joySet(dir, arm);
+                };
+                DESKTOP_JOYSTICK.addEventListener('mousedown', setFromDesktop);
+                DESKTOP_JOYSTICK.addEventListener('mousemove', (e) => { if (e.buttons === 1) setFromDesktop(e); });
+            }
+
+            // RESPONSIVE SCALING - REFERENCE SIZES
+            const REFERENCE_LCD_W = 760, REFERENCE_LCD_H = 460;
+            const REFERENCE_HERO_UP = 286, REFERENCE_HERO_DOWN = 206;
+            const REFERENCE_BAR_W = 89, REFERENCE_BAR_H = 80; // уменьшенный размер батончика в 1.5 раза
+            const REFERENCE_SUGAR = 69; // уменьшенный размер сахара в 1.5 раза
+            const REFERENCE_Y_TOP = 130, REFERENCE_Y_BOTTOM = 330;
+            const REFERENCE_X_L = 4, REFERENCE_X_R = 756;
+            const REFERENCE_GAP = 300;
+            const REFERENCE_BELT_H = 40;
+
+            let currentScale = 1;
+
+            function updateScale()
+            {
+                const rect = lcd.getBoundingClientRect();
+                const actualWidth = rect.width;
+                const actualHeight = rect.height;
+                currentScale = Math.min(actualWidth / REFERENCE_LCD_W, actualHeight / REFERENCE_LCD_H);
+                createBelts();
+                updateTouchAreas();
+                renderHero();
+                renderItems();
+            }
+
+            window.addEventListener('resize', () =>
+            {
+                updateScale();
+                updateUI();
+                if (running)
+                    setBeltAnimRunning(true, difficulty().duration);
+            });
+
+            // INIT
+            function initBelts()
+            {
+                createBelts();
+                setBeltAnimRunning(false, difficulty().duration);
+            }
+
+            function initUI()
+            {
+                sfxSwitch.classList.toggle('on', !muted);
+                sfxLabel.textContent = muted ? 'ЗВУК: OFF' : 'ЗВУК: ON';
+                if (sfxSwitchHeader) {
+                    sfxSwitchHeader.classList.toggle('on', !muted);
+                    sfxLabelHeader.textContent = muted ? 'ЗВУК: OFF' : 'ЗВУК: ON';
+                }
+                RULES.display = 'normal';
+
+                if (isMobile())
+                    document.body.classList.toggle('force-mobile', on);
+                else
+                    sfxSwitchHeader.addEventListener('click', () =>
+                    {
+                        muted = !muted;
+                        sfxSwitchHeader.classList.toggle('on', !muted);
+                        sfxLabelHeader.textContent = muted ? 'ЗВУК: OFF' : 'ЗВУК: ON';
+
+                        if (muted && musicPlaying)
+                        {
+                            stopMusic();
+                        }
+                        else if (!muted && running)
+                        {
+                            startMusic();
+                        }
+
+                        sfx('click');
+                    });
+            }
+
+            reset();
+            updateScale();
+            updateUI();
+            initBelts();
+            updateTouchAreas();
+            initUI();
+            updateMobileUI();
+
+            // ===== DEV SELF-TESTS =====
+            try
+            {
+                console.assert(BELT_H > 0, 'BELT_H>0');
+                console.assert(msToClock(61000) === '1:01', 'msToClock format');
+            }
+            catch (e)
+            {
+                console.warn('Self-tests failed:', e);
+            }
+        }
+    )();
+    </script>
+</body>
+</html>
