@@ -16,7 +16,7 @@
             --green: #10b981;
             --red: #ef4444;
             --accent: #7b1c1c;
-            --lcd-w: 760px;
+            --lcd-w: 950px;
             --lcd-h: 460px;
             --belt-h: 40px; /* толщина ленты */
             --stroke: 8px; /* увеличили толщину обводки в 2 раза */
@@ -493,7 +493,7 @@
         .force-mobile .area {
             width: 100%;
             height: 100%;
-            grid-template-columns: 1fr auto;
+            grid-template-columns: 2fr 1fr;
             padding: 3vmin 3vmin 3vmin 3vmin
         }
 
@@ -615,8 +615,8 @@
         /* джойстик видимый в форс-мобайл независимо от размеров окна */
         .force-mobile .joystick {
             position: relative;
-            width: 22.5vmin;
-            height: 22.5vmin;
+            width: 28vmin;
+            height: 28vmin;
             border: 0.25vmin solid #000;
             border-radius: 50%;
             background: #d9d3c7;
@@ -626,8 +626,8 @@
         .force-mobile .joy-cross {
             position: absolute;
             inset: 50% auto auto 50%;
-            width: 15vmin;
-            height: 15vmin;
+            width: 18vmin;
+            height: 18vmin;
             transform: translate(-50%,-50%)
         }
 
@@ -684,7 +684,7 @@
         }
 
         .force-mobile .joy-arrow {
-            font-size: 1.75vmin;
+            font-size: 2.2vmin;
             color: rgba(0,0,0,0.4);
             font-weight: bold;
             pointer-events: none;
@@ -708,8 +708,8 @@
             <!-- ===== ХЕДЕР (для десктопа остаётся) ===== -->
             <div class="hdr">
                 <div class="hdr-left">
-                    <img id="logoRex" src="https://i.ibb.co/S4FxhQVx/12-2025.png" alt="Protein REX" style="height:4vmin" />
-                    <img id="logoCyber" src="https://cdn.splay.uz/media/contents_meta/kiberderevnya/images/logo_image_rectangle.resized.png" alt="Кибердеревня" style="height:8vmin; margin-top:2vmin" />
+                    <img id="logoRex" src="images/protein-rex-logo.png" alt="Protein REX" style="height:4vmin" />
+                    <img id="logoCyber" src="images/kiberderevnya-logo.png" alt="Кибердеревня" style="height:8vmin; margin-top:2vmin" />
                 </div>
                 <div class="hdr-right">
                     <!-- Переключатель мобайл-превью (виден на ПК) -->
@@ -740,7 +740,7 @@
             <div class="area">
                 <div class="screen-wrap">
                     <div class="lcd" id="lcd">
-                        <img src="https://64.media.tumblr.com/0f3927f0017e84b9c6ec69901c5a825a/tumblr_n9lwm7N7VX1tz79vpo1_r1_1280.gif" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;" />
+                        <img src="images/background.gif" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0;" />
                         <div class="grid-bg"></div>
                         <svg class="abs" viewBox="0 0 760 460" style="inset:0" id="beltsSvg"></svg>
                         <div id="itemsLayer" class="abs" style="inset:0"></div>
@@ -861,8 +861,8 @@
 
                     <!-- Лого вниз справа (моб.) -->
                     <div id="logosMobile" class="logos-bottom" style="display:none">
-                        <img src="https://i.ibb.co/S4FxhQVx/12-2025.png" alt="Protein REX" />
-                        <img src="https://cdn.splay.uz/media/contents_meta/kiberderevnya/images/logo_image_rectangle.resized.png" alt="Кибердеревня" />
+                        <img src="images/protein-rex-logo.png" alt="Protein REX" />
+                        <img src="images/kiberderevnya-logo.png" alt="Кибердеревня" />
                     </div>
                 </div>
 
@@ -939,15 +939,15 @@
             const DESKTOP_JOYSTICK = document.getElementById('desktopJoystick');
             const LOGOS_M = document.getElementById('logosMobile');
 
-            const CONVEYOR_SRC = 'https://i.ibb.co/N6xK04Fk/Conveyor-Pixel.png';
-            const REX_SRC = 'https://i.ibb.co/Jj6N70J6/rex-1.png';
-            const SUGAR_SRC = 'https://i.ibb.co/BKZdp3Hj/sugar.png';
-            const HERO_UP = 'https://i.ibb.co/GQmFdSqw/upper-1.png';
-            const HERO_DOWN = 'https://i.ibb.co/C34XsNyb/under-1.png';
+            const CONVEYOR_SRC = 'images/conveyor-pixel.png';
+            const REX_SRC = 'images/rex-bar.png';
+            const SUGAR_SRC = 'images/sugar.png';
+            const HERO_UP = 'images/hero-up.png';
+            const HERO_DOWN = 'images/hero-down.png';
 
-            const lcdW = 760, lcdH = 460;
+            const lcdW = 950, lcdH = 460;
             const X_L = 4, X_R = lcdW - 4; const X_C = Math.round(lcdW / 2);
-            const GAP = 280; const X_CL = X_C - GAP / 2; const X_CR = X_C + GAP / 2;
+            const GAP = 350; const X_CL = X_C - GAP / 2; const X_CR = X_C + GAP / 2;
             const Y_TOP = 130, Y_BOTTOM = 330;
             const BELT_H = 40;
             const DASH_L = 16, DASH_G = 24; const DASH_CYCLE = DASH_L + DASH_G;
@@ -2045,13 +2045,13 @@
             }
 
             // RESPONSIVE SCALING - REFERENCE SIZES
-            const REFERENCE_LCD_W = 760, REFERENCE_LCD_H = 460;
+            const REFERENCE_LCD_W = 950, REFERENCE_LCD_H = 460;
             const REFERENCE_HERO_UP = 286, REFERENCE_HERO_DOWN = 206;
             const REFERENCE_BAR_W = 89, REFERENCE_BAR_H = 80; // уменьшенный размер батончика в 1.5 раза
             const REFERENCE_SUGAR = 69; // уменьшенный размер сахара в 1.5 раза
             const REFERENCE_Y_TOP = 130, REFERENCE_Y_BOTTOM = 330;
-            const REFERENCE_X_L = 4, REFERENCE_X_R = 756;
-            const REFERENCE_GAP = 300;
+            const REFERENCE_X_L = 4, REFERENCE_X_R = 946;
+            const REFERENCE_GAP = 375;
             const REFERENCE_BELT_H = 40;
 
             let currentScale = 1;
