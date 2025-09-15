@@ -1086,7 +1086,6 @@
             let shaking = false;
             let danceInterval = null;
             let explosionInterval = null;
-            let autoPlay = false; // Режим оставлен в коде, UI удалён
             let muted = false;
 
             // ===== РЕНДЕР СЕМИСЕГМЕНТНЫХ ЦИФР =====
@@ -1698,38 +1697,6 @@
                     spawnOne();
                 }
 
-                if (autoPlay)
-                {
-                    let targetBar = null, targetSugar = null;
-
-                    for (const it of items)
-                    {
-                        if (it.t < 1.5)
-                        {
-                            if (it.kind === 'bar')
-                            {
-                                if (!targetBar || it.t > targetBar.t)
-                                    targetBar = it;
-                            }
-                            else
-                            {
-                                if (!targetSugar || it.t > targetSugar.t)
-                                    targetSugar = it;
-                            }
-                        }
-                    }
-
-                    if (targetBar && targetBar.t > 0.4)
-                    {
-                        hero.face = targetBar.side;
-                        hero.armsUp = (targetBar.lane === 0);
-                    }
-                    else if (targetSugar && targetSugar.t > 0.65)
-                    {
-                        hero.face = (targetSugar.side === 'L' ? 'R' : 'L');
-                        hero.armsUp = (targetSugar.lane !== 0);
-                    }
-                }
 
                 const dur = difficulty().duration;
                 const updated = [];
@@ -2027,6 +1994,7 @@
             const sfxLabel = document.getElementById('sfxLabel');
             sfxSwitch.addEventListener('click', () =>
             {
+                ensureCtx();
                 muted = !muted;
                 sfxSwitch.classList.toggle('on', !muted);
                 sfxLabel.textContent = muted ? 'ЗВУК: OFF' : 'ЗВУК: ON';
@@ -2099,11 +2067,6 @@
                     updateUI();
                 }
 
-                // скрытую клавишу для авто оставим
-                if (k === 't' || k === 'f')
-                {
-                    autoPlay = !autoPlay;
-                }
 
                 if (e.code === 'Space')
                 {
@@ -2199,6 +2162,7 @@
 
             function handleTouch(side, e)
             {
+                ensureCtx();
                 if (!running)
                     return;
 
@@ -2227,10 +2191,10 @@
             // Tap to start for mobile
             lcd.addEventListener('touchstart', (e) =>
             {
+                ensureCtx();
                 if (isMobile() && !running && elapsed === 0)
                 {
                     e.preventDefault();
-                    ensureCtx();
                     startPause();
                 }
             }, { passive: false });
@@ -2261,6 +2225,7 @@
             // ===== Джойстик: 4 позиции =====
             function joySet(dir, arm)
             {
+                ensureCtx();
                 if (!running)
                     return;
 
@@ -2288,6 +2253,7 @@
             {
                 const setFrom = (ev) =>
                 {
+                    ensureCtx();
                     const { dir, arm } = joyFromEvent(ev, JOYSTICK);
                     joySet(dir, arm);
                 };
