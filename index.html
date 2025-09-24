@@ -525,7 +525,7 @@
 
         .force-mobile .action-buttons {
             display: flex !important;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
             margin-bottom: 1vmin;
             order: 3;
@@ -578,7 +578,7 @@
 
         .force-mobile .logos-bottom {
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: flex-start;
             justify-content: flex-start;
             gap: 1vmin;
@@ -587,12 +587,12 @@
         }
 
         .force-mobile .logos-bottom img:first-child {
-            max-width: 10vmin;
+            max-width: 20vmin;
             height: auto
         }
 
         .force-mobile .logos-bottom img:last-child {
-            max-width: 15vmin;
+            max-width: 30vmin;
             height: auto;
             margin-top: 1vmin
         }
@@ -618,7 +618,7 @@
 
         /* доп. правила для форс-мобайла */
         .force-mobile #joyWrap {
-            display: block !important
+            display: none !important
         }
 
         /* джойстик видимый в форс-мобайл независимо от размеров окна */
@@ -905,13 +905,13 @@
                             <button id="btnStart" class="btn-round" style="background:#c73a32"></button>
                             <div class="btn-caption" id="btnStartCap" style="font-size: 0.875vmin">СТАРТ</div>
                         </div>
-                        <div class="sfx-container-mobile" style="order:0; margin-bottom:0; align-self:center">
-                            <div id="sfxSwitch" class="switch"><div class="knob"></div></div>
-                            <div class="btn-caption" id="sfxLabel" style="font-size: 0.875vmin">ЗВУК: ON</div>
-                        </div>
                         <div>
                             <button id="btnReset" class="btn-round" style="background:#6b7280"></button>
                             <div class="btn-caption" style="font-size:0.875vmin">СБРОС</div>
+                        </div>
+                        <div class="sfx-container-mobile" style="order:0; margin-bottom:0; align-self:center">
+                            <div id="sfxSwitch" class="switch"><div class="knob"></div></div>
+                            <div class="btn-caption" id="sfxLabel" style="font-size: 0.875vmin">ЗВУК: ON</div>
                         </div>
                     </div>
 
